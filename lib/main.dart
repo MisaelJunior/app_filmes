@@ -117,6 +117,12 @@ class _TelaListaAssistirState extends State<TelaListaAssistir> {
     }
   }
 
+  void excluirFilme(Filme filme) {
+    setState(() {
+      filmes.remove(filme);
+    });
+  }
+
   @override
   void dispose() {
     // libera a memoria do campoNomeFilme quando a tela for fechada
@@ -158,16 +164,27 @@ class _TelaListaAssistirState extends State<TelaListaAssistir> {
                 itemCount: filmesNaoAssistidos.length,
                 //itembuilder constroi cada item da lista, recebe o contexto e o index do item (tipo um laço for)
                 itemBuilder: (context, index) {
-                  final filme = filmesNaoAssistidos[index];
+                  Filme filme = filmesNaoAssistidos[index];
                   return ListTile(
                     title: Text(filme.titulo),
-                    trailing: Checkbox(
-                      value: filme.assistido,
-                      onChanged: (_) {
-                        setState(() {
-                          filme.assistido = true;
-                        });
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // quando o checkbox for marcado, o filme vai para a lista de filmes assistidos
+                        Checkbox(
+                          value: filme.assistido,
+                          onChanged: (_) {
+                            setState(() {
+                              filme.assistido = true;
+                            });
+                          },
+                        ),
+                        // eh possivel deletar o filme completamente da lista de filmes a assistir, aqui ele nao vai para a lista de filmes assistidos
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => excluirFilme(filme),
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -181,14 +198,71 @@ class _TelaListaAssistirState extends State<TelaListaAssistir> {
 }
 
 // tela de filmes assistidos
-class TelaListaAssistidos extends StatelessWidget {
+class TelaListaAssistidos extends StatefulWidget {
   const TelaListaAssistidos({super.key});
 
   @override
+  State<TelaListaAssistidos> createState() => _TelaListaAssistidosState();
+}
+
+class _TelaListaAssistidosState extends State<TelaListaAssistidos> {
+  
+  void excluirFilme(Filme filme) {
+    setState(() {
+      filmes.remove(filme);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    //filtra so os filmes assistidos
+    List<Filme> filmesAssistidos = filmes.where((filme) => filme.assistido).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Filmes Assistidos')),
-      body: const Center(child: Text('Em construção')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${filmesAssistidos.length} Filmes Assistidos',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filmesAssistidos.length,
+                itemBuilder: (context, index) {
+                  Filme filme = filmesAssistidos[index];
+                  return ListTile(
+                    title: Text(filme.titulo),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // torna o checkbox desmarcavel, e quando desmarcado, o filme volta para a lista de filmes a assistir
+                        Checkbox(
+                          value: filme.assistido,
+                          onChanged: (_) {
+                            setState(() {
+                              filme.assistido = false;
+                            });
+                          },
+                        ),
+                        // eh possivel deletar o filme completamente da lista de filmes assistidos, aqui ele nao volta para a lista de filmes a assistir
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => excluirFilme(filme),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
